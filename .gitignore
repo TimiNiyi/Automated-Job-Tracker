@@ -1,0 +1,31 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# Local configuration
+.n8n/
+.vscode/
+
+# Python and temporary files
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Local exports and archives
+*.zip

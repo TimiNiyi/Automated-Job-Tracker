@@ -1,0 +1,905 @@
+{
+  "name": "Populate Table with already processed jobs",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "10d6603e-8b17-40a7-9eae-8cb71a38d3b6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 300,
+        "filters": {
+          "q": "newer_than:2M"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c772eb12-8e84-40fa-920e-3f7116dc18ec",
+      "name": "getMessagesFromPastTwoMonths",
+      "webhookId": "98f64e63-ba7f-42b1-8675-389eb2270057",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5c4SoqnyzuxqoI5H",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "db91ce11-f863-4f16-a0e9-c3b500978d19",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Congratulations",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "dd17a7ee-a702-479d-b4fe-21adb2ababe6",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Internship",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "34a537d4-d3e2-4652-98d0-84fa881680fd",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Intern",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "ddd3a61a-c00a-41f6-92ce-5e501a4fe7c4",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "job",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "0b4bb173-3e2d-4cdf-bddb-aeb7263b7ea0",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Offer",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "88376430-3329-4f45-8269-0d422dbc8ae4",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Unfortunately",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "1ac57b0a-52f3-461c-96ad-2cb34cddccc8",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Declined",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "588ba75e-ee97-48e2-8abe-521e25d42609",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "rejected",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "92ad6ed2-9a5a-4b6f-be1b-d8c529a16dd9",
+      "name": "filterForJobs"
+    },
+    {
+      "parameters": {
+        "text": "={{ \"subject :\" + $json.subject + \"\\n\\n snippet:\" + $json.snippet + \"\\n\\n from:\" + $json.From + \"\\n\\n\\n messageId:\" + $json.id + \"\\n\\n processedAt:\" + $json.internalDate}}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"job_title\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The job title associated with the application. Use an empty string if unknown\"\n  },\n    \"company\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The employer or company name mentioned in the email. Use an empty string if unknown.\"\n  },\n    \"application_status\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"Applied\",\n        \"Interviewed\",\n        \"Assessment\",\n        \"Offer\",\n        \"second stage interview\",\n        \"third stage interview\",\n        \"Rejected\",\n        \"Unknown\"\n      ],\n      \"description\": \"The application stage explicitly supported in the email. Use email if stage is undetermined\"\n  },\n    \"job_type\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"internship\",\n        \"fulltime\",\n        \"part-time\",\n        \"contract\"\n      ],\n      \"description\": \"The type of job explicitly supported in the email\"\n  },\n    \"notes\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"Important things that are mentioned in the email to note. For example, interview date and time\"\n  },\n    \"interview_date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Interview date explicitly stated in the email, if available. Return the date in YYYY-MM-DD format. If no interview date is explicitly stated, return null.\"\n  },\n    \"interview_time\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Interview time explicitly stated in the email, if available. Return the time in HOUR-MINUTE format. If no interview time is explicitly stated, return null.\"\n    },\n    \"email_Id\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Email address of the sender explicitly available in the email metadata, if available. Return null if unavailable.\"\n    },\n    \"email_Date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Date the email was received, explicitly available in the email metadata. Return the date in YYYY-MM-DD format, or null if unavailable.\"\n  },\n    \"last_updated\":{\n      \"type\":[\"number\", \"null\"]\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3616,
+        0
+      ],
+      "id": "ea6440d6-dc45-4669-93dc-53af7643c173",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        3616,
+        192
+      ],
+      "id": "1ed16603-7e87-4c67-b9de-9c218b74e01f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fw9zGsC74TBLMmzF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        320
+      ],
+      "id": "71b05dcc-8121-4a7f-b263-03df240fb477",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fw9zGsC74TBLMmzF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ \"subject :\" + $json.subject + \"\\n\\n snippet:\" + $json.snippet + \"\\n\\n from:\" + $json.From + \"\\n\\n\\n messageId:\" + $json.id + \"\\n\\n processedAt:\" + $json.internalDate}}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"job_title\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The job title associated with the application. Use an empty string if unknown\"\n  },\n    \"company\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The employer or company name mentioned in the email. Use an empty string if unknown.\"\n  },\n    \"application_status\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"Applied\",\n        \"Interviewed\",\n        \"Assessment\",\n        \"Offer\",\n        \"second stage interview\",\n        \"third stage interview\",\n        \"Rejected\",\n        \"Unknown\"\n      ],\n      \"description\": \"The application stage explicitly supported in the email. Use email if stage is undetermined\"\n  },\n    \"job_type\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"internship\",\n        \"fulltime\",\n        \"part-time\",\n        \"contract\"\n      ],\n      \"description\": \"The type of job explicitly supported in the email\"\n  },\n    \"emailid\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\":\"The id of the mail.\"\n    },\n    \"notes\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"Important things that are mentioned in the email to note. For example, interview date and time\"\n  },\n    \"interview_date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Interview date explicitly stated in the email, if available. Return the date in YYYY-MM-DD format. If no interview date is explicitly stated, return null.\"\n  },\n    \"interview_time\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Interview time explicitly stated in the email, if available. Return the time in HOUR-MINUTE format. If no interview time is explicitly stated, return null.\"\n    }\n}\n}",
+        "options": {
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 7000
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "50ea62c1-75d2-4cb9-9f7e-e66ad3f1c1e3",
+      "name": "extractJobEmailDetails",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        752,
+        -16
+      ],
+      "id": "e09782ca-9845-43b7-85b6-2220aae99eef",
+      "name": "loopOverEmails"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_title": "={{ $json.output.job_title }}",
+            "company": "={{ $json.output.company }}",
+            "application_status": "={{ $json.output.application_status }}",
+            "job_type": "={{ $json.output.job_type }}",
+            "notes": "={{ $json.output.notes }}",
+            "interview_date": "={{ $json.output.interview_date }}",
+            "interview_time": "={{ $json.output.interview_time }}",
+            "email_id": "={{ $('getMessagesFromPastTwoMonths').item.json.id }}",
+            "email_date": "={{ $('getMessagesFromPastTwoMonths').item.json.internalDate }}",
+            "sender_email": "={{ $('getMessagesFromPastTwoMonths').item.json.From }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_time",
+              "displayName": "interview_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_id",
+              "displayName": "email_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_date",
+              "displayName": "email_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender_email",
+              "displayName": "sender_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        -160
+      ],
+      "id": "7560e61b-05cb-454d-a0ac-92694aa16812",
+      "name": "populateRefDataTable"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1680,
+        304
+      ],
+      "id": "faa451a0-a731-4894-b2dc-d9b5a81e3a46",
+      "name": "Wait",
+      "webhookId": "98e800e4-0eb2-4d1e-b6c0-fd0368d4862a"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $json.output.emailid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        -160
+      ],
+      "id": "debb4114-2f07-4b7d-a00b-2dae7d938dd3",
+      "name": "If row does not exist"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "daed821f-9aea-4f47-a97b-f7cdde87d158",
+              "leftValue": "={{ $json.output.job_title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "abeeb384-cafa-492e-b1a6-3b2915a54f8f",
+              "leftValue": "={{ $json.output.company }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1120,
+        -192
+      ],
+      "id": "27f913f2-5a69-4b8b-9a1f-789659640c31",
+      "name": "checkIfJobtitle&CompanyPresent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "0d7a3b6f-6aee-4b9f-80c4-3f7bc9aff31a",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "Marketing",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "cc04def1-0deb-4aa6-aff8-b4ea1cf1d3ae",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "Promotional",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bc9c8da0-7331-492d-b120-20cc7179543e",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "recommendations",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "964a1759-adb4-44ff-a298-af45447b4a81",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "recommendation",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1456,
+        -176
+      ],
+      "id": "ff5f3473-2dd0-4c7c-95e8-5cf6e233c3e9",
+      "name": "checkForJobOpportunitiesUpdateEmail"
+    },
+    {
+      "parameters": {
+        "operation": "rowExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $json.output.emailid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        64
+      ],
+      "id": "3b9c3a86-617b-41db-bc7c-af437887940c",
+      "name": "If row exists"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $json.output.emailid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_title": "={{ $json.output.job_title }}",
+            "company": "={{ $json.output.company }}",
+            "application_status": "={{ $json.output.application_status }}",
+            "job_type": "={{ $json.output.job_type }}",
+            "notes": "={{ $json.output.notes }}",
+            "interview_date": "={{ $json.output.interview_date }}",
+            "interview_time": "={{ $json.output.interview_time }}",
+            "email_id": "={{ $json.output.emailid }}",
+            "email_date": "={{ $('filterForJobs').item.json.internalDate }}",
+            "sender_email": "={{ $('filterForJobs').item.json.From }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_time",
+              "displayName": "interview_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_id",
+              "displayName": "email_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_date",
+              "displayName": "email_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender_email",
+              "displayName": "sender_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        64
+      ],
+      "id": "2f95dcf9-3702-4790-88f4-401e1a1717e9",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "f1333d28-812f-42a6-a2c0-971d5d51d640",
+          "mode": "list",
+          "cachedResultName": "Job Applications",
+          "cachedResultUrl": "https://app.notion.com/p/25187537efbe4ff4b04c2c67fda62e12"
+        },
+        "title": "New Job Applications",
+        "propertiesUi": {
+          "propertyValues": [
+            {}
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        2352,
+        -160
+      ],
+      "id": "24b110bf-7b23-44a2-b4c8-c4c8990b251e",
+      "name": "Create a database page",
+      "credentials": {
+        "notionOAuth2Api": {
+          "id": "1qtX1D4gsXy7qIqj",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "getMessagesFromPastTwoMonths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getMessagesFromPastTwoMonths": {
+      "main": [
+        [
+          {
+            "node": "filterForJobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filterForJobs": {
+      "main": [
+        [
+          {
+            "node": "loopOverEmails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "extractJobEmailDetails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extractJobEmailDetails": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loopOverEmails": {
+      "main": [
+        [
+          {
+            "node": "checkIfJobtitle&CompanyPresent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "extractJobEmailDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "loopOverEmails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "populateRefDataTable": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If row does not exist": {
+      "main": [
+        [
+          {
+            "node": "populateRefDataTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIfJobtitle&CompanyPresent": {
+      "main": [
+        [],
+        [
+          {
+            "node": "checkForJobOpportunitiesUpdateEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkForJobOpportunitiesUpdateEmail": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If row does not exist",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If row exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If row exists": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b872ddb8-1364-45b2-b6bc-7fa336ef5ada",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6634333955174960588de1a78b37b2da1df3f53f8b90ac59db3607e444f70b41"
+  },
+  "nodeGroups": [],
+  "id": "XzbTQLJogOK3DXJv",
+  "tags": []
+}

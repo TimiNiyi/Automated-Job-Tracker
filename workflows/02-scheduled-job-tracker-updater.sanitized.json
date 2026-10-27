@@ -1,0 +1,1123 @@
+{
+  "name": "JobTracker&Updater",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d146b1c7-2009-4fc7-bfdf-71f46209935b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {
+          "q": "newer_than:2d"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "358194f6-de3b-450f-8530-53be191f18b4",
+      "name": "Get many messages",
+      "webhookId": "ae5ddbe0-ad4a-4b74-986d-26a155479ac8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5c4SoqnyzuxqoI5H",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5c6f3246-bafb-4d0c-ad23-64663621f655",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Congratulations",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "8eb2631c-74ec-44c8-96b4-5d11b684d0fc",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Job",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bfc02e76-eab0-4e21-bf44-af370796925d",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Offer",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "ad7dae58-0734-457a-ad93-eab57be20c65",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Internship",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "b0b2e7d6-a5d9-4d9a-8351-bc8532f2591b",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Rejected",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "93f84a2b-70de-485b-961c-2f69ec0cb652",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Declined",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "6230f846-99f4-47ef-a4db-a2d90d4ec837",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Unfortunately",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "924f0eff-158d-4f1d-841f-ce2eabe0a04c",
+              "leftValue": "={{ $json.snippet }}",
+              "rightValue": "Intern",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b8f2c0be-9527-4918-8555-312dbb160881",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        3536,
+        -208
+      ],
+      "id": "0349b8f6-a543-444d-93e1-fa048963daa9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fw9zGsC74TBLMmzF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "rowExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -208
+      ],
+      "id": "afea75e4-8df3-4a5e-8c0f-dd7616dfb853",
+      "name": "checkIncomingEmailExist"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        80
+      ],
+      "id": "97661683-becc-4b39-ba91-3d1f219bcb2b",
+      "name": "checkIncomingEmailDoesn'tExist"
+    },
+    {
+      "parameters": {
+        "text": "={{ \"subject: \" + $json.subject + \"\\n\\n body: \" + $json.snippet + \"\\n\\n from: \" + $json.From + \"\\n\\n messageId: \" + $json.id + \"\\n\\n processedAt: \" + $json.internalDate }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\":{\n    \"job_title\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The job title associated with the application. Use an empty string if unknown\"\n    },\n    \"company\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The employer or company name mentioned in the email. Use an empty string if unknown\"\n  },\n    \"application_status\":{\n      \"type\": [\"string\", \"null\"],\n      \"enum\":[\n        \"Applied\",\n        \"Interviewed\",\n        \"First stage interview\",\n        \"Second stage interview\",\n        \"Third stage interview\",\n        \"Orientation\",\n        \"Rejected\",\n        \"Assessment\",\n        \"Offer\",\n        \"Unknown\"\n      ],\n      \"description\": \"The application stage explicitly supported in the email. Use email if stage is undetermined\"\n},\n  \"job_type\":{\n    \"type\":[\"string\", \"null\"],\n    \"enum\":[\n        \"Internship\",\n        \"Fulltime\",\n        \"Part time\",\n        \"contract\"\n      ],\n    \"description\": \"The type of job explicitly supported in the email\"\n},\n  \"notes\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"Important things that are mentioned in the email to note. For example, interview date and time\"\n  },\n    \"interview_date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Interview date explicitly stated in the email, if available. Return the date in YYYY-MM-DD format. If no interview date is explicitly stated, return null.\"\n  },\n    \"interview_time\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Interview time explicitly stated in the email, if available. Return the time in HOUR-MINUTE format. If no interview time is explicitly stated, return null.\"\n    }\n}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3536,
+        -464
+      ],
+      "id": "651085ba-2c10-43c3-8528-75940af16a6e",
+      "name": "transformNonExistentEmailData"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email_id",
+              "keyValue": "={{ $('checkIncomingEmailExist').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_title": "={{ $json.output.job_title }}",
+            "company": "={{ $json.output.company }}",
+            "application_status": "={{ $json.output.application_status }}",
+            "job_type": "={{ $json.output.job_type }}",
+            "notes": "={{ $json.output.notes }}",
+            "interview_time": "={{ $json.output.interview_time }}",
+            "interview_date": "={{ $json.output.interview_date }}",
+            "email_id": "={{ $('If').item.json.id }}",
+            "email_date": "={{ $('If').item.json.internalDate }}",
+            "sender_email": "={{ $('If').item.json.From }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_time",
+              "displayName": "interview_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_id",
+              "displayName": "email_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_date",
+              "displayName": "email_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender_email",
+              "displayName": "sender_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        -352
+      ],
+      "id": "383db2ab-bf17-4ca4-82f9-d4770039d016",
+      "name": "updateTableWithLatestUpdate"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "LWAZl0SjH1B6cAMp",
+          "mode": "list",
+          "cachedResultName": "processedJobs",
+          "cachedResultUrl": "/projects/aG1qdfgzI2HV9xk2/datatables/LWAZl0SjH1B6cAMp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_title": "={{ $json.output.job_title }}",
+            "company": "={{ $json.output.company }}",
+            "application_status": "={{ $json.output.application_status }}",
+            "job_type": "={{ $json.output.job_type }}",
+            "notes": "={{ $json.output.notes }}",
+            "interview_date": "={{ $json.output.interview_date }}",
+            "interview_time": "={{ $json.output.interview_time }}",
+            "email_id": "={{ $json.id }}",
+            "email_date": "={{ $json.internalDate }}",
+            "sender_email": "={{ $json.From }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_date",
+              "displayName": "interview_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "interview_time",
+              "displayName": "interview_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_id",
+              "displayName": "email_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email_date",
+              "displayName": "email_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender_email",
+              "displayName": "sender_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        -80
+      ],
+      "id": "7e318074-15f4-44a7-918a-9fd539094fdd",
+      "name": "insertNewEmailsIntoTable"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        944,
+        -208
+      ],
+      "id": "5715d921-8ee6-422d-abe8-91d76015120d",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        320
+      ],
+      "id": "bf72d9ff-9084-4ca7-b91b-563f9b763e00",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fw9zGsC74TBLMmzF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 7
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        -192
+      ],
+      "id": "706b5092-9dff-4fbe-ba94-259892154ff7",
+      "name": "Wait",
+      "webhookId": "06304b35-9741-41c8-abc8-d14b071f78fe"
+    },
+    {
+      "parameters": {
+        "text": "={{ \"subject: \" + $json.subject + \"\\n\\n snippet: \" + $json.snippet + \"\\n\\n messageId: \" + $json.id + \"\\n\\n processedAt: \" + $json.internalDate + \"\\n\\n from: \" + $json.From }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\":{\n    \"job_title\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The job title associated with the application. Use an empty string if unknown\"\n    },\n    \"company\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The employer or company name mentioned in the email. Use an empty string if unknown\"\n  },\n    \"application_status\":{\n      \"type\": [\"string\", \"null\"],\n      \"enum\":[\n        \"Applied\",\n        \"Interviewed\",\n        \"First stage interview\",\n        \"Second stage interview\",\n        \"Third stage interview\",\n        \"Orientation\",\n        \"Rejected\",\n        \"Assessment\",\n        \"Offer\",\n        \"Unknown\"\n      ],\n      \"description\": \"The application stage explicitly supported in the email. Use email if stage is undetermined\"\n},\n  \"job_type\":{\n    \"type\":[\"string\", \"null\"],\n    \"enum\":[\n        \"Internship\",\n        \"Fulltime\",\n        \"Part time\",\n        \"contract\"\n      ],\n    \"description\": \"The type of job explicitly supported in the email\"\n},\n  \"notes\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"Important things that are mentioned in the email to note. For example, interview date and time\"\n  },\n    \"interview_date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Interview date explicitly stated in the email, if available. Return the date in YYYY-MM-DD format. If no interview date is explicitly stated, return null.\"\n  },\n    \"interview_time\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Interview time explicitly stated in the email, if available. Return the time in HOUR-MINUTE format. If no interview time is explicitly stated, return null.\"\n    }\n}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        -192
+      ],
+      "id": "161270dd-b8e9-44f4-96cb-86c31265ce0f",
+      "name": "transformEmailThatExist"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "8a767eb2-6eb2-4a9d-940c-a8d7c41370ee",
+              "leftValue": "={{ $json.output.job_title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9022ebb2-98ed-4fca-8f8a-64189feffd2b",
+              "leftValue": "={{ $json.output.company }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1248,
+        -384
+      ],
+      "id": "3c423cd0-34eb-489c-8b68-ebe435017f64",
+      "name": "checkIfJobtitlte&CompanyArePresent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "6e70aafc-e714-4489-b910-3949ab9b72cd",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "Promotional",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "2d455dfc-d0ba-483c-ad2f-99185b0e311b",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "recommendations",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "f647e5ab-da29-44bd-ba97-43d989191b0e",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "marketing",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1616,
+        -368
+      ],
+      "id": "e70424eb-034e-4955-81cb-d0b9a7e555a3",
+      "name": "checkForPromotionalEmails"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1712,
+        80
+      ],
+      "id": "3e37b4bd-0328-44be-b4a3-60c210a9d10b",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "amount": 7
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2704,
+        288
+      ],
+      "id": "792020cd-3697-4147-ab34-6b6291a8d3fb",
+      "name": "Wait1",
+      "webhookId": "4501b6ef-f225-4ad1-9a22-fae0a5494a70"
+    },
+    {
+      "parameters": {
+        "text": "={{ \"subject\" + $json.subject + \"\\n\\n snippet: \" + $json.snippet + \"\\n\\n messageId: \" + $json.id + \"\\n\\n from: \" + $json.From + \"\\n\\n processedAt: \" + $json.internalDate }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"job_title\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The job title associated with the application. Use an empty string if unknown\"\n  },\n    \"company\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"The employer or company name mentioned in the email. Use an empty string if unknown.\"\n  },\n    \"application_status\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"Applied\",\n        \"Interviewed\",\n        \"Assessment\",\n        \"Offer\",\n        \"second stage interview\",\n        \"third stage interview\",\n        \"Rejected\",\n        \"Unknown\"\n      ],\n      \"description\": \"The application stage explicitly supported in the email. Use email if stage is undetermined\"\n  },\n    \"job_type\":{\n      \"type\":[\"string\", \"null\"],\n      \"enum\": [\n        \"internship\",\n        \"fulltime\",\n        \"part-time\",\n        \"contract\"\n      ],\n      \"description\": \"The type of job explicitly supported in the email\"\n  },\n    \"emailid\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\":\"The id of the mail.\"\n    },\n    \"notes\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\": \"Important things that are mentioned in the email to note. For example, interview date and time\"\n  },\n    \"interview_date\":{\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Interview date explicitly stated in the email, if available. Return the date in YYYY-MM-DD format. If no interview date is explicitly stated, return null.\"\n  },\n    \"interview_time\":{\n      \"type\":[\"string\", \"null\"],\n      \"description\":\"Interview time explicitly stated in the email, if available. Return the time in HOUR-MINUTE format. If no interview time is explicitly stated, return null.\"\n    }\n}\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2272,
+        96
+      ],
+      "id": "faf8ea9c-f766-4cca-8970-99b001cb57fd",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2272,
+        528
+      ],
+      "id": "b7c84638-023a-40a7-a577-3ac52e93b683",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fw9zGsC74TBLMmzF",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "fe388228-1082-4bd7-9591-23c4408b5eda",
+              "leftValue": "={{ $json.output.job_title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f6ce7011-761b-43e1-aaf5-7a60f4134cfe",
+              "leftValue": "",
+              "rightValue": "={{ $json.output.company }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2208,
+        -112
+      ],
+      "id": "615ec845-2c4b-4a70-9fc7-208f674565e6",
+      "name": "checkIfEmailAndCompanyExist"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "9ce20afe-7dc4-4ee9-aa10-fab1946b359b",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "promotional",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "749172a4-e16e-4f4b-8237-961205b536da",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "recommendation",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "4e0af211-85f2-457c-9534-0037c106475f",
+              "leftValue": "={{ $json.output.notes }}",
+              "rightValue": "recommendations",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2656,
+        -96
+      ],
+      "id": "ebd84926-a0cc-4d03-8955-b008e0916f9a",
+      "name": "checkForPromotionalEmails1"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        2496,
+        -352
+      ],
+      "id": "0f546ef3-553b-4ca1-aad6-e91319faaa93",
+      "name": "Create a database page",
+      "credentials": {
+        "notionOAuth2Api": {
+          "id": "1qtX1D4gsXy7qIqj",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "checkIncomingEmailDoesn'tExist",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "checkIncomingEmailExist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "transformNonExistentEmailData",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIncomingEmailExist": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIncomingEmailDoesn'tExist": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transformNonExistentEmailData": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "checkIfJobtitlte&CompanyArePresent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "transformEmailThatExist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "transformEmailThatExist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transformEmailThatExist": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIfJobtitlte&CompanyArePresent": {
+      "main": [
+        [],
+        [
+          {
+            "node": "checkForPromotionalEmails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkForPromotionalEmails": {
+      "main": [
+        [],
+        [
+          {
+            "node": "updateTableWithLatestUpdate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "checkIfEmailAndCompanyExist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkIfEmailAndCompanyExist": {
+      "main": [
+        [],
+        [
+          {
+            "node": "checkForPromotionalEmails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checkForPromotionalEmails1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "insertNewEmailsIntoTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "updateTableWithLatestUpdate": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5065a205-00a4-42ed-a589-4d76b1bb6364",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6634333955174960588de1a78b37b2da1df3f53f8b90ac59db3607e444f70b41"
+  },
+  "nodeGroups": [],
+  "id": "c2XNIBW0klR6DCJk",
+  "tags": []
+}
